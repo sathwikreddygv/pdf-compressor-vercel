@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react';
-import { PDFDocument, PDFName, PDFRawStream, PDFObject, PDFRef } from 'pdf-lib';
+import { PDFDocument, PDFName, PDFRawStream, PDFObject, PDFRef, PDFContext } from 'pdf-lib';
 
 interface ImageObject {
 	ref: PDFRef,
@@ -65,7 +65,7 @@ const imagesLoaded = async (imagesInDoc: ImageObject[], loadedImages: LoadedImag
 			if(ctx) ctx.drawImage(loadedImages[i], 0, 0, canvas.width, canvas.height);
 	
 			// Get the scaled-down data back from the canvas via canvas.toDataURL
-			const scaledDataUrl = canvas.toDataURL("image/jpeg", 0.5); // Set your own output format and quality
+			const scaledDataUrl = canvas.toDataURL("image/jpeg", 0.6); // Set your own output format and quality
 			console.log('scaledDataUrl', scaledDataUrl)
 	
 			// Convert the data URL back to an ArrayBuffer
@@ -89,8 +89,9 @@ const imagesLoaded = async (imagesInDoc: ImageObject[], loadedImages: LoadedImag
 			console.log(x.data.byteLength, uint8Array.byteLength); // Check sizes
 	
 			console.log(x.data, uint8Array)
-	
-			pdfDoc.context.indirectObjects.get(imagesInDoc[i].ref).contents = uint8Array
+			
+			let context = (pdfDoc.context as any)
+			context.indirectObjects.get(imagesInDoc[i].ref).contents = uint8Array
 		}
 	}
 
@@ -113,14 +114,17 @@ export default function Home() {
 		try{
 			const pdfDoc: PDFDocument = await PDFDocument.load(await file.arrayBuffer());
 			const imagesInDoc:ImageObject[] = [];
-			pdfDoc.context.indirectObjects.forEach((pdfObject: PDFObject, ref: PDFRef) => {
+			let indirectObjects: [PDFRef, PDFObject][] = pdfDoc.context.enumerateIndirectObjects()
+			indirectObjects.forEach(([ref, pdfObject]) => {
 				console.log('pdfObject', pdfObject, ref)
 				if (!(pdfObject instanceof PDFRawStream)) return;
-				const {
-					dict: {
-						dict: dict
-					}
-				} = pdfObject;
+				// const {
+				// 	dict: {
+				// 		dict: dict
+				// 	}
+				// } = pdfObject;
+				const dict = (pdfObject as any).dict;
+
 				const smaskRef = dict.get(PDFName.of('SMask'));
 				const colorSpace = dict.get(PDFName.of('ColorSpace'));
 				const subtype = dict.get(PDFName.of('Subtype'));
