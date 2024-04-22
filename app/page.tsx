@@ -1,113 +1,195 @@
-import Image from "next/image";
+"use client"
+import React, { useState } from 'react';
+import { Compressor } from 'compressorjs';
+import pako from 'pako';
+import { PDFDocument, PDFName, PDFRawStream, } from 'pdf-lib';
+
+function getMimeTypeFromExtension(imageType: string) {
+	const extension = imageType
+	switch (extension) {
+		case 'jpg':
+		case 'jpeg':
+			return 'image/jpeg';
+		case 'png':
+			return 'image/png';
+		case 'gif':
+			return 'image/gif';
+		case 'bmp':
+			return 'image/bmp';
+		case 'webp':
+			return 'image/webp';
+		case 'svg':
+			return 'image/svg+xml';
+		default:
+			return '';
+	}
+}
+
+const imagesLoaded = async (imagesInDoc, loadedImages, pdfDoc) => {
+	for(let i = 0; i < imagesInDoc.length; i++) {
+		if(loadedImages[i]){
+			console.log('imagesInDoc[i]', i)
+			let x = imagesInDoc[i]
+			let blob = new Blob([x.data], { type: getMimeTypeFromExtension(x.type) });
+			let blobUrl = URL.createObjectURL(blob);
+			let downloadLink = document.createElement('a');
+			downloadLink.href = blobUrl;
+			downloadLink.download = 'filename_before'+i;
+			document.body.appendChild(downloadLink);
+			downloadLink.click(); //before compression
+			URL.revokeObjectURL(blobUrl);
+			document.body.removeChild(downloadLink);
+	
+			let uint8Array 
+			const canvas = document.createElement('canvas');
+			const ctx = canvas.getContext('2d');
+			canvas.width = 500; // Set your desired output width
+			canvas.height = 500 * (x.height / x.width); // Maintain aspect ratio
+			
+			console.log(loadedImages[i], x.height, x.width, canvas.width, canvas.height)
+			// Send the image to the canvas
+			ctx.drawImage(loadedImages[i], 0, 0, canvas.width, canvas.height);
+	
+			// Get the scaled-down data back from the canvas via canvas.toDataURL
+			const scaledDataUrl = canvas.toDataURL("image/jpeg", 0.5); // Set your own output format and quality
+			console.log('scaledDataUrl', scaledDataUrl)
+	
+			// Convert the data URL back to an ArrayBuffer
+			const byteString = atob(scaledDataUrl.split(',')[1]);
+			let arrayBufferFromDataUrl = new ArrayBuffer(byteString.length);
+			uint8Array = new Uint8Array(arrayBufferFromDataUrl);
+			for (let i = 0; i < byteString.length; i++) {
+				uint8Array[i] = byteString.charCodeAt(i);
+			}
+			
+			blob = new Blob([uint8Array], { type: getMimeTypeFromExtension(x.type) });
+			blobUrl = URL.createObjectURL(blob);
+			downloadLink = document.createElement('a');
+			downloadLink.href = blobUrl;
+			downloadLink.download = 'filename_after'+i;
+			document.body.appendChild(downloadLink);
+			downloadLink.click();//after compression
+			URL.revokeObjectURL(blobUrl);
+			document.body.removeChild(downloadLink);
+	
+			console.log(x.data.byteLength, uint8Array.byteLength); // Check sizes
+	
+			console.log(x.data, uint8Array)
+	
+			pdfDoc.context.indirectObjects.get(imagesInDoc[i].ref).contents = uint8Array
+		}
+	}
+
+
+	// Save compressed PDF
+	const compressedPdfBytes = await pdfDoc.save();
+
+	// Return compressed PDF as Blob
+	return new Blob([compressedPdfBytes], { type: 'application/pdf' });
+}
 
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editin&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+	const [pdfFile, setPdfFile] = useState(null);
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setPdfFile(event.target.files[0]);
+	};
+	const compressPdf = async (file: File) => {
+		try{
+			const pdfDoc = await PDFDocument.load(await file.arrayBuffer());
+			const imagesInDoc = [];
+			pdfDoc.context.indirectObjects.forEach((pdfObject, ref) => {
+				if (!(pdfObject instanceof PDFRawStream)) return;
+				const {
+					dict: {
+						dict: dict
+					}
+				} = pdfObject;
+				const smaskRef = dict.get(PDFName.of('SMask'));
+				const colorSpace = dict.get(PDFName.of('ColorSpace'));
+				const subtype = dict.get(PDFName.of('Subtype'));
+				const width = dict.get(PDFName.of('Width'));
+				const height = dict.get(PDFName.of('Height'));
+				const name = dict.get(PDFName.of('Name'));
+				const bitsPerComponent = dict.get(PDFName.of('BitsPerComponent'));
+				const filter = dict.get(PDFName.of('Filter'));
+				if (subtype === PDFName.of('Image')) {
+					imagesInDoc.push({
+						ref,
+						smaskRef,
+						colorSpace,
+						name: name ? name.encodedName : `Object${ref.objectNumber}`,
+						width: width.numberValue,
+						height: height.numberValue,
+						bitsPerComponent: bitsPerComponent.numberValue,
+						data: pdfObject.contents,
+						type: 'jpg'
+					});
+				}
+			})
+			console.log('imagesInDoc', imagesInDoc)
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+			var loadedImages = {};
+			var promiseArray = []
+			for(let j=0; j<imagesInDoc.length; j++){
+				let x = imagesInDoc[j]
+				// if(x.smaskRef){
+					var prom = new Promise(function(resolve,reject){
+						try{
+							var img = new Image();
+							let blob = new Blob([x.data], { type: getMimeTypeFromExtension(x.type) });
+							let blobUrl = URL.createObjectURL(blob);
+							img.onload = function(){
+								loadedImages[j] = img;
+								resolve();
+							};
+							img.src = blobUrl;
+							setTimeout(resolve, 1000)
+						}catch(e){
+							reject()
+							console.error(e)
+						}
+					});
+					promiseArray.push(prom)
+				// }
+			}
+			await Promise.all(promiseArray)
+			console.log('donnee')
+			let final = await imagesLoaded(imagesInDoc, loadedImages, pdfDoc)
+			return final;
+		}catch(e){
+			console.error(e)
+		}
+	};
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+	const handleCompress = async () => {
+		try {
+			const compressedPdfBlob = await compressPdf(pdfFile);
+			// const compressedPdfBlob = new Blob([compressedPdfData], {
+			// 	type: 'application/pdf',
+			// });
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+			// Download compressed PDF
+			const url = window.URL.createObjectURL(compressedPdfBlob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = 'compressed_pdf.pdf';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		} catch (error) {
+			console.error('Compression error:', error);
+		}
+	};
+
+	return (
+		<main>
+			<div>
+				<input type="file" accept=".pdf" onChange={handleFileChange} />
+				<button onClick={handleCompress}>Compress PDF</button>
+			</div>
+		</main>
+	);
 }
+
