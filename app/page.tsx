@@ -1,6 +1,22 @@
 "use client"
 import React, { useState } from 'react';
-import { PDFDocument, PDFName, PDFRawStream, } from 'pdf-lib';
+import { PDFDocument, PDFName, PDFRawStream, PDFObject, PDFRef } from 'pdf-lib';
+
+interface ImageObject {
+	ref: PDFRef,
+	smaskRef: PDFRef,
+	type: string,
+	width: number,
+	height: number,
+	name: string,
+	data: Uint8Array,
+	bitsPerComponent: number,
+	colorSpace: PDFRef
+}
+
+interface LoadedImages {
+	[key: number]: HTMLImageElement;
+  }
 
 function getMimeTypeFromExtension(imageType: string) {
 	const extension = imageType
@@ -23,7 +39,7 @@ function getMimeTypeFromExtension(imageType: string) {
 	}
 }
 
-const imagesLoaded = async (imagesInDoc, loadedImages, pdfDoc) => {
+const imagesLoaded = async (imagesInDoc: ImageObject[], loadedImages: LoadedImages, pdfDoc: PDFDocument) => {
 	for(let i = 0; i < imagesInDoc.length; i++) {
 		if(loadedImages[i]){
 			console.log('imagesInDoc[i]', i)
@@ -46,7 +62,7 @@ const imagesLoaded = async (imagesInDoc, loadedImages, pdfDoc) => {
 			
 			console.log(loadedImages[i], x.height, x.width, canvas.width, canvas.height)
 			// Send the image to the canvas
-			ctx.drawImage(loadedImages[i], 0, 0, canvas.width, canvas.height);
+			if(ctx) ctx.drawImage(loadedImages[i], 0, 0, canvas.width, canvas.height);
 	
 			// Get the scaled-down data back from the canvas via canvas.toDataURL
 			const scaledDataUrl = canvas.toDataURL("image/jpeg", 0.5); // Set your own output format and quality
@@ -88,16 +104,17 @@ const imagesLoaded = async (imagesInDoc, loadedImages, pdfDoc) => {
 
 export default function Home() {
 
-	const [pdfFile, setPdfFile] = useState(null);
+	const [pdfFile, setPdfFile] = useState<File | null>(null);
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setPdfFile(event.target.files[0]);
+		if(event.target.files) setPdfFile(event.target.files[0]);
 	};
-	const compressPdf = async (file: File) => {
+	const compressPdf = async (file: File): Promise<Blob> => {
 		try{
-			const pdfDoc = await PDFDocument.load(await file.arrayBuffer());
-			const imagesInDoc = [];
-			pdfDoc.context.indirectObjects.forEach((pdfObject, ref) => {
+			const pdfDoc: PDFDocument = await PDFDocument.load(await file.arrayBuffer());
+			const imagesInDoc:ImageObject[] = [];
+			pdfDoc.context.indirectObjects.forEach((pdfObject: PDFObject, ref: PDFRef) => {
+				console.log('pdfObject', pdfObject, ref)
 				if (!(pdfObject instanceof PDFRawStream)) return;
 				const {
 					dict: {
@@ -128,7 +145,7 @@ export default function Home() {
 			})
 			console.log('imagesInDoc', imagesInDoc)
 
-			var loadedImages = {};
+			var loadedImages : LoadedImages= {};
 			var promiseArray = []
 			for(let j=0; j<imagesInDoc.length; j++){
 				let x = imagesInDoc[j]
@@ -140,7 +157,7 @@ export default function Home() {
 							let blobUrl = URL.createObjectURL(blob);
 							img.onload = function(){
 								loadedImages[j] = img;
-								resolve();
+								resolve(1);
 							};
 							img.src = blobUrl;
 							setTimeout(resolve, 1000)
@@ -154,30 +171,33 @@ export default function Home() {
 			}
 			await Promise.all(promiseArray)
 			console.log('donnee')
-			let final = await imagesLoaded(imagesInDoc, loadedImages, pdfDoc)
+			let final: Blob = await imagesLoaded(imagesInDoc, loadedImages, pdfDoc)
 			return final;
-		}catch(e){
+		}catch(e) {
 			console.error(e)
+			throw e
 		}
 	};
 
 	const handleCompress = async () => {
-		try {
-			const compressedPdfBlob = await compressPdf(pdfFile);
-			// const compressedPdfBlob = new Blob([compressedPdfData], {
-			// 	type: 'application/pdf',
-			// });
-
-			// Download compressed PDF
-			const url = window.URL.createObjectURL(compressedPdfBlob);
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = 'compressed_pdf.pdf';
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
-		} catch (error) {
-			console.error('Compression error:', error);
+		if(pdfFile){
+			try {
+				const compressedPdfBlob: Blob = await compressPdf(pdfFile);
+				// const compressedPdfBlob = new Blob([compressedPdfData], {
+				// 	type: 'application/pdf',
+				// });
+	
+				// Download compressed PDF
+				const url = window.URL.createObjectURL(compressedPdfBlob);
+				const link = document.createElement('a');
+				link.href = url;
+				link.download = 'compressed_pdf.pdf';
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+			} catch (error) {
+				console.error('Compression error:', error);
+			}
 		}
 	};
 
