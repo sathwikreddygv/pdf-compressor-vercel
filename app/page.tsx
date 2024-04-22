@@ -1,7 +1,5 @@
 "use client"
 import React, { useState } from 'react';
-import { Compressor } from 'compressorjs';
-import pako from 'pako';
 import { PDFDocument, PDFName, PDFRawStream, } from 'pdf-lib';
 
 function getMimeTypeFromExtension(imageType: string) {
