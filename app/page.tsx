@@ -42,17 +42,17 @@ function getMimeTypeFromExtension(imageType: string) {
 const imagesLoaded = async (imagesInDoc: ImageObject[], loadedImages: LoadedImages, pdfDoc: PDFDocument) => {
 	for(let i = 0; i < imagesInDoc.length; i++) {
 		if(loadedImages[i]){
-			console.log('imagesInDoc[i]', i)
+			// console.log('imagesInDoc[i]', i)
 			let x = imagesInDoc[i]
-			let blob = new Blob([x.data], { type: getMimeTypeFromExtension(x.type) });
-			let blobUrl = URL.createObjectURL(blob);
-			let downloadLink = document.createElement('a');
-			downloadLink.href = blobUrl;
-			downloadLink.download = 'filename_before'+i;
-			document.body.appendChild(downloadLink);
-			downloadLink.click(); //before compression
-			URL.revokeObjectURL(blobUrl);
-			document.body.removeChild(downloadLink);
+			// let blob = new Blob([x.data], { type: getMimeTypeFromExtension(x.type) });
+			// let blobUrl = URL.createObjectURL(blob);
+			// let downloadLink = document.createElement('a');
+			// downloadLink.href = blobUrl;
+			// downloadLink.download = 'filename_before'+i;
+			// document.body.appendChild(downloadLink);
+			// downloadLink.click(); //before compression
+			// URL.revokeObjectURL(blobUrl);
+			// document.body.removeChild(downloadLink);
 	
 			let uint8Array 
 			const canvas = document.createElement('canvas');
@@ -60,13 +60,13 @@ const imagesLoaded = async (imagesInDoc: ImageObject[], loadedImages: LoadedImag
 			canvas.width = 500; // Set your desired output width
 			canvas.height = 500 * (x.height / x.width); // Maintain aspect ratio
 			
-			console.log(loadedImages[i], x.height, x.width, canvas.width, canvas.height)
+			// console.log(loadedImages[i], x.height, x.width, canvas.width, canvas.height)
 			// Send the image to the canvas
 			if(ctx) ctx.drawImage(loadedImages[i], 0, 0, canvas.width, canvas.height);
 	
 			// Get the scaled-down data back from the canvas via canvas.toDataURL
 			const scaledDataUrl = canvas.toDataURL("image/jpeg", 0.6); // Set your own output format and quality
-			console.log('scaledDataUrl', scaledDataUrl)
+			// console.log('scaledDataUrl', scaledDataUrl)
 	
 			// Convert the data URL back to an ArrayBuffer
 			const byteString = atob(scaledDataUrl.split(',')[1]);
@@ -76,19 +76,19 @@ const imagesLoaded = async (imagesInDoc: ImageObject[], loadedImages: LoadedImag
 				uint8Array[i] = byteString.charCodeAt(i);
 			}
 			
-			blob = new Blob([uint8Array], { type: getMimeTypeFromExtension(x.type) });
-			blobUrl = URL.createObjectURL(blob);
-			downloadLink = document.createElement('a');
-			downloadLink.href = blobUrl;
-			downloadLink.download = 'filename_after'+i;
-			document.body.appendChild(downloadLink);
-			downloadLink.click();//after compression
-			URL.revokeObjectURL(blobUrl);
-			document.body.removeChild(downloadLink);
+			// blob = new Blob([uint8Array], { type: getMimeTypeFromExtension(x.type) });
+			// blobUrl = URL.createObjectURL(blob);
+			// downloadLink = document.createElement('a');
+			// downloadLink.href = blobUrl;
+			// downloadLink.download = 'filename_after'+i;
+			// document.body.appendChild(downloadLink);
+			// downloadLink.click();//after compression
+			// URL.revokeObjectURL(blobUrl);
+			// document.body.removeChild(downloadLink);
 	
-			console.log(x.data.byteLength, uint8Array.byteLength); // Check sizes
+			// console.log(x.data.byteLength, uint8Array.byteLength); // Check sizes
 	
-			console.log(x.data, uint8Array)
+			// console.log(x.data, uint8Array)
 			
 			let context = (pdfDoc.context as any)
 			context.indirectObjects.get(imagesInDoc[i].ref).contents = uint8Array
