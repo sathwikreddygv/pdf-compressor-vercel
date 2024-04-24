@@ -52,17 +52,7 @@ function getMimeTypeFromExtension(imageType: string) {
 const imagesLoaded = async (imagesInDoc: ImageObject[], loadedImages: LoadedImages, pdfDoc: PDFDocument) => {
 	for (let i = 0; i < imagesInDoc.length; i++) {
 		if (loadedImages[i]) {
-			// console.log('imagesInDoc[i]', i)
 			let x = imagesInDoc[i]
-			// let blob = new Blob([x.data], { type: getMimeTypeFromExtension(x.type) });
-			// let blobUrl = URL.createObjectURL(blob);
-			// let downloadLink = document.createElement('a');
-			// downloadLink.href = blobUrl;
-			// downloadLink.download = 'filename_before'+i;
-			// document.body.appendChild(downloadLink);
-			// downloadLink.click(); //before compression
-			// URL.revokeObjectURL(blobUrl);
-			// document.body.removeChild(downloadLink);
 
 			let uint8Array
 			const canvas = document.createElement('canvas');
@@ -70,35 +60,15 @@ const imagesLoaded = async (imagesInDoc: ImageObject[], loadedImages: LoadedImag
 			canvas.width = 500; // Set your desired output width
 			canvas.height = 500 * (x.height / x.width); // Maintain aspect ratio
 
-			// console.log(loadedImages[i], x.height, x.width, canvas.width, canvas.height)
-			// Send the image to the canvas
 			if (ctx) ctx.drawImage(loadedImages[i], 0, 0, canvas.width, canvas.height);
 
-			// Get the scaled-down data back from the canvas via canvas.toDataURL
 			const scaledDataUrl = canvas.toDataURL("image/jpeg", 0.6); // Set your own output format and quality
-			// console.log('scaledDataUrl', scaledDataUrl)
-
-			// Convert the data URL back to an ArrayBuffer
 			const byteString = atob(scaledDataUrl.split(',')[1]);
 			let arrayBufferFromDataUrl = new ArrayBuffer(byteString.length);
 			uint8Array = new Uint8Array(arrayBufferFromDataUrl);
 			for (let i = 0; i < byteString.length; i++) {
 				uint8Array[i] = byteString.charCodeAt(i);
 			}
-
-			// blob = new Blob([uint8Array], { type: getMimeTypeFromExtension(x.type) });
-			// blobUrl = URL.createObjectURL(blob);
-			// downloadLink = document.createElement('a');
-			// downloadLink.href = blobUrl;
-			// downloadLink.download = 'filename_after'+i;
-			// document.body.appendChild(downloadLink);
-			// downloadLink.click();//after compression
-			// URL.revokeObjectURL(blobUrl);
-			// document.body.removeChild(downloadLink);
-
-			// console.log(x.data.byteLength, uint8Array.byteLength); // Check sizes
-
-			// console.log(x.data, uint8Array)
 
 			let context = (pdfDoc.context as any)
 			context.indirectObjects.get(imagesInDoc[i].ref).contents = uint8Array
@@ -146,11 +116,6 @@ export default function Home() {
 			indirectObjects.forEach(([ref, pdfObject]) => {
 				// console.log('pdfObject', pdfObject, ref)
 				if (!(pdfObject instanceof PDFRawStream)) return;
-				// const {
-				// 	dict: {
-				// 		dict: dict
-				// 	}
-				// } = pdfObject;
 				const dict = (pdfObject as any).dict;
 
 				const smaskRef = dict.get(PDFName.of('SMask'));
@@ -237,8 +202,6 @@ export default function Home() {
 	return (
 		<main>
 			<div style={{ height: '100vh' }} className='px-4 flex flex-col align-middle justify-center'>
-				{/* <input type="file" accept=".pdf" onChange={handleFileChange} />
-				<button onClick={handleCompress}>Compress PDF</button> */}
 				<div className='typewriter text-black text-3xl  font-bold mb-16' style={{ '--n': 53 } as React.CSSProperties}>
 					In-browser Pdf Compressor.
 				</div>
