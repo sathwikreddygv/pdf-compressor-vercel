@@ -18,12 +18,22 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
+  /* background: linear-gradient(
+      to diagonally,
       transparent,
       rgb(var(--background-end-rgb))
     )
-    rgb(var(--background-start-rgb));
+    rgb(var(--background-start-rgb)); */
+	height: 100vh;
+	background: linear-gradient(311deg, #90aead, #fbe9d0, #244855);
+    background-size: 600% 600%;
+    animation: AnimationName 30s ease infinite;
+}
+
+@keyframes AnimationName {
+	0%{background-position:0% 50%}
+	50%{background-position:100% 50%}
+	100%{background-position:0% 50%}
 }
 
 @layer utilities {
@@ -31,3 +41,64 @@ body {
     text-wrap: balance;
   }
 }
+
+.rainbow_button {
+	--magic-rainbow-color-1: hsl(0deg, 96%, 55%);
+	--magic-rainbow-color-2: hsl(25deg, 100%, 50%);
+	--magic-rainbow-color-1: hsl(40deg, 100%, 50%);
+	background: linear-gradient(
+	  170deg,
+	  var(--magic-rainbow-color-1),
+	  var(--magic-rainbow-color-2)
+	);
+	/* 🤯 */
+	transition:
+	  --magic-rainbow-color-1 1000ms linear,
+	  --magic-rainbow-color-2 1000ms linear,
+	  --magic-rainbow-color-3 1000ms linear;
+}
+
+.typewriter {
+	overflow: hidden; /* Ensures the content is not revealed until the animation */
+	border-right: .15em solid orange; /* The typwriter cursor */
+	white-space: nowrap; /* Keeps the content on a single line */
+	margin-left: auto; /* Gives that scrolling effect as the typing happens */
+	margin-right: auto;
+	letter-spacing: .1em; /* Adjust as needed */
+	animation: 
+	  typing 2s steps(40, end),
+	  blink-caret .75s step-end infinite;
+  }
+
+  @media (max-width: 767px) {
+	.typewriter {
+		white-space: pre-wrap;
+		text-align: center;
+	}
+  }
+  
+  /* The typing effect */
+  @keyframes typing {
+	from { width: 0 }
+	to { width: 90% }
+  }
+
+  @media (min-width: 768px) {
+	@keyframes typing {
+		from { width: 0 }
+		to { width: 60% }
+	}
+  }
+
+  @media (min-width: 992px) {
+	@keyframes typing {
+		from { width: 0 }
+		to { width: 32% }
+	}
+  }
+  
+  /* The typewriter cursor effect */
+  @keyframes blink-caret {
+	from, to { border-color: transparent }
+	50% { border-color: orange; }
+  }

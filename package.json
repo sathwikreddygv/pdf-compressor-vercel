@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "antd": "^5.16.4",
     "fs": "^0.0.1-security",
     "next": "14.1.4",
     "pdf-lib": "^1.17.1",
