@@ -232,7 +232,7 @@ export default function Home() {
 			<div style={{ height: '100vh' }} className='px-4 flex flex-col align-middle justify-center'>
 				{/* <input type="file" accept=".pdf" onChange={handleFileChange} />
 				<button onClick={handleCompress}>Compress PDF</button> */}
-				<div className='typewriter text-black text-3xl  font-bold mb-16'>
+				<div className='typewriter text-black text-3xl  font-bold mb-16' style={{ '--n': 53 }}>
 					In-browser Pdf Compressor.
 				</div>
 				<div className='mb-4 lg:px-64'>
