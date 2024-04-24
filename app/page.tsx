@@ -224,7 +224,7 @@ export default function Home() {
 				const url = window.URL.createObjectURL(compressedPdfBlob);
 				const link = document.createElement('a');
 				link.href = url;
-				link.download = 'compressed_pdf.pdf';
+				link.download = (pdfFile.name.replace('.pdf', '')) + '_compressed.pdf';
 				document.body.appendChild(link);
 				link.click();
 				document.body.removeChild(link);
