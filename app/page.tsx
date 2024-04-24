@@ -6,6 +6,12 @@ import type { UploadProps } from 'antd';
 import { Button, message, Upload } from 'antd';
 const { Dragger } = Upload;
 
+message.config({
+	top: 20,
+	duration: 10,
+	maxCount: 2
+  });
+
 interface ImageObject {
 	ref: PDFRef,
 	smaskRef: PDFRef,
@@ -200,6 +206,7 @@ export default function Home() {
 			let final: Blob = await imagesLoaded(imagesInDoc, loadedImages, pdfDoc)
 			return final;
 		} catch (e) {
+			message.error(`Oops! Processing hiccup: File may be encrypted`)
 			console.error(e)
 			throw e
 		}
